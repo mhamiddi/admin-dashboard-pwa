@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Jom Digital — Command Center</title>
+
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Jom Digital">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1E3A8A">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-touch-startup-image" content="/splash-1170.png">
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#1E3A8A;
+  --navy-dark:#162C6B;
+  --navy-light:#EFF6FF;
+  --bg:#F1F5F9;
+  --surface:#FFFFFF;
+  --border:#E2E8F0;
+  --text-primary:#0F172A;
+  --text-secondary:#475569;
+  --text-muted:#94A3B8;
+  --green:#059669;
+  --green-bg:#ECFDF5;
+  --green-border:#A7F3D0;
+  --red:#DC2626;
+  --red-bg:#FEF2F2;
+  --red-border:#FECACA;
+  --amber:#D97706;
+  --amber-bg:#FFFBEB;
+  --amber-border:#FDE68A;
+  --blue:#2563EB;
+  --blue-bg:#EFF6FF;
+  --blue-border:#BFDBFE;
+  --purple:#7C3AED;
+  --purple-bg:#F5F3FF;
+  --purple-border:#DDD6FE;
+  --shadow-sm:0 1px 3px rgba(15,23,42,.08),0 1px 2px rgba(15,23,42,.04);
+  --shadow-md:0 4px 16px rgba(15,23,42,.1),0 2px 6px rgba(15,23,42,.06);
+  --ease:cubic-bezier(0.22,1,0.36,1);
+  --radius:14px;
+  --radius-sm:8px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+  --tab-height:56px;
+}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:var(--bg);color:var(--text-primary);
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-user-select:none;user-select:none;
+  overscroll-behavior:none;
+}
+#app-shell{display:flex;flex-direction:column;height:100%;height:100dvh}
+.status-bar-spacer{height:var(--safe-top);background:var(--navy);flex-shrink:0}
+.header{
+  background:var(--navy);color:#fff;
+  padding:.75rem 1rem;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;z-index:10;
+}
+.header-left{display:flex;align-items:center;gap:10px}
+.header-logo{
+  width:34px;height:34px;border-radius:9px;flex-shrink:0;
+  background:rgba(255,255,255,.15);
+  display:flex;align-items:center;justify-content:center;
+}
+.header h1{font-size:1rem;font-weight:700;letter-spacing:-.02em}
+.header h1 span{opacity:.7;font-weight:400}
+.header-right{display:flex;align-items:center;gap:8px}
+#lastUpdated{font-size:.65rem;opacity:.6}
+.status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+.status-dot.online{background:#34D399;box-shadow:0 0 0 2px rgba(52,211,153,.2)}
+.status-dot.offline{background:#F87171;box-shadow:0 0 0 2px rgba(248,113,113,.2)}
+.btn-icon{
+  width:32px;height:32px;border-radius:8px;border:none;cursor:pointer;
+  background:rgba(255,255,255,.12);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .2s;
+}
+.btn-icon:active{background:rgba(255,255,255,.25)}
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;display:none}
+.scroll-area.active{display:block}
+.main{padding:1rem;max-width:800px;margin:0 auto;padding-bottom:calc(var(--tab-height) + var(--safe-bottom) + 1rem)}
+.pull-indicator{
+  text-align:center;padding:.5rem;color:var(--text-muted);
+  font-size:.65rem;font-weight:600;opacity:0;transition:opacity .2s;
+}
+.pull-indicator.visible{opacity:1}
+.stats-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:1rem}
+.stat-card{
+  background:var(--surface);padding:1rem;
+  border-radius:var(--radius);border:1px solid var(--border);
+  box-shadow:var(--shadow-sm);position:relative;overflow:hidden;
+  transition:transform .2s var(--ease);
+}
+.stat-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--navy),#3B82F6);
+}
+.stat-card:active{transform:scale(.97)}
+.stat-card .eyebrow{font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:.25rem}
+.stat-card .num{font-size:1.5rem;font-weight:800;color:var(--navy);line-height:1;margin-bottom:.15rem}
+.stat-card .label{font-size:.65rem;font-weight:500;color:var(--text-secondary)}
+.section-card{
+  background:var(--surface);border-radius:var(--radius);
+  border:1px solid var(--border);box-shadow:var(--shadow-sm);overflow:hidden;
+  margin-bottom:.75rem;
+}
+.card-header{
+  padding:.75rem 1rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.card-header-left{display:flex;align-items:center;gap:8px}
+.card-icon{
+  width:30px;height:30px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.card-eyebrow{font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--navy);margin-bottom:.05rem}
+.card-header h3{font-size:.78rem;font-weight:700;color:var(--text-primary)}
+.card-pill{
+  font-size:.6rem;font-weight:600;color:var(--text-muted);
+  background:var(--bg);padding:2px 8px;border-radius:999px;border:1px solid var(--border);
+}
+.card-body{padding:.75rem 1rem}
+.service-list{display:flex;flex-direction:column;gap:6px}
+.service-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.5rem .75rem;border-radius:var(--radius-sm);
+  background:var(--bg);border:1px solid var(--border);
+}
+.service-left{display:flex;align-items:center;gap:8px;min-width:0}
+.service-name{font-size:.72rem;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.service-uptime{font-size:.6rem;color:var(--text-muted)}
+.service-status{
+  font-size:.55rem;text-transform:uppercase;letter-spacing:.06em;
+  padding:2px 7px;border-radius:999px;font-weight:700;flex-shrink:0;margin-left:6px;
+}
+.service-status.active{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.service-status.inactive{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.bal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bal-card{
+  text-align:center;padding:1rem;
+  border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);
+}
+.bal-card:active{transform:scale(.97)}
+.bal-card .curr{font-size:.6rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem}
+.bal-card .amt{font-size:1.5rem;font-weight:800;line-height:1}
+.bal-card .amt.cny{color:var(--navy)}
+.bal-card .amt.usd{color:#059669}
+.update-card{
+  display:flex;align-items:flex-start;gap:10px;padding:.75rem;
+  border-radius:var(--radius-sm);background:var(--blue-bg);border:1px solid var(--blue-border);
+}
+.update-icon{
+  width:36px;height:36px;border-radius:9px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--navy),#2563EB);
+  display:flex;align-items:center;justify-content:center;
+}
+.update-info .tag{font-size:.58rem;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.15rem}
+.update-info .version{font-size:.82rem;font-weight:700;color:var(--text-primary);margin:.15rem 0}
+.update-info .desc{font-size:.7rem;color:var(--text-secondary);line-height:1.4}
+.update-info a{color:var(--navy);text-decoration:none;font-size:.7rem;font-weight:600;display:inline-block;margin-top:.35rem}
+.rec-list{display:flex;flex-direction:column;gap:6px}
+.rec-item{
+  display:flex;align-items:flex-start;gap:10px;padding:.6rem .75rem;
+  border-radius:var(--radius-sm);border:1px solid var(--border);font-size:.72rem;
+}
+.rec-item.critical{border-color:var(--red-border);background:var(--red-bg)}
+.rec-item.warning{border-color:var(--amber-border);background:var(--amber-bg)}
+.rec-item.success{border-color:var(--green-border);background:var(--green-bg)}
+.rec-item.info{border-color:var(--blue-border);background:var(--blue-bg)}
+.rec-icon{font-size:.9rem;flex-shrink:0;margin-top:1px}
+.rec-text .rec-title{font-weight:700;color:var(--text-primary)}
+.rec-text .rec-detail{color:var(--text-secondary);margin-top:2px;font-size:.68rem}
+
+/* SITE CATEGORY CARDS */
+.site-cat-card{margin-bottom:.75rem}
+.site-cat-head{display:flex;align-items:center;gap:8px;padding:0 0 .5rem 0}
+.site-cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.site-cat-dot.perodua{background:#ED1C24}
+.site-cat-dot.proton{background:#0050A0}
+.site-cat-dot.toyota{background:#EB0A1E}
+.site-cat-dot.coway{background:#046BD2}
+.site-cat-dot.dental{background:#0891B2}
+.site-cat-dot.canopy{background:#D97706}
+.site-cat-dot.other{background:#7C3AED}
+.site-cat-dot.tools{background:#1E3A8A}
+.site-cat-name{font-size:.7rem;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:.04em}
+.site-cat-count{font-size:.6rem;color:var(--text-muted);font-weight:500}
+.site-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.site-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:.6rem .7rem;text-decoration:none;color:var(--text-primary);
+  transition:transform .15s,border-color .15s;display:block;
+}
+.site-card:active{transform:scale(.97);border-color:var(--navy)}
+.site-card-name{font-size:.68rem;font-weight:600;line-height:1.2;margin-bottom:.15rem}
+.site-card-url{
+  font-size:.58rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  display:flex;align-items:center;gap:4px;
+}
+.site-card-url .site-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.site-card-url .site-dot.live{background:var(--green)}
+.site-card-url .site-dot.dev{background:var(--amber)}
+.sites-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:1rem}
+.sites-stat{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:.6rem;text-align:center;
+}
+.sites-stat .num{font-size:1.25rem;font-weight:800;color:var(--navy);line-height:1}
+.sites-stat .lbl{font-size:.55rem;color:var(--text-muted);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.quick-links{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.quick-link{
+  display:flex;align-items:center;gap:8px;
+  padding:.6rem .75rem;border-radius:var(--radius-sm);
+  border:1px solid var(--border);background:var(--bg);
+  text-decoration:none;color:var(--text-primary);font-size:.7rem;font-weight:500;
+  transition:background .15s;
+}
+.quick-link:active{background:var(--navy-light);border-color:var(--navy)}
+.ql-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ql-icon.blue{background:var(--blue-bg);color:var(--blue)}
+.ql-icon.green{background:var(--green-bg);color:var(--green)}
+.ql-icon.purple{background:var(--purple-bg);color:var(--purple)}
+.ql-icon.orange{background:var(--amber-bg);color:var(--amber)}
+.ql-icon.red{background:var(--red-bg);color:var(--red)}
+.error-banner{
+  background:var(--red-bg);border:1px solid var(--red-border);
+  padding:.75rem;border-radius:var(--radius-sm);
+  margin-bottom:.75rem;font-size:.72rem;color:var(--red);font-weight:500;
+}
+.error-banner button{
+  margin-left:.5rem;background:var(--red);color:#fff;border:none;
+  padding:4px 10px;border-radius:6px;font-size:.65rem;font-weight:600;cursor:pointer;
+}
+.loading-text{text-align:center;padding:1.5rem;color:var(--text-muted);font-size:.78rem}
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.skeleton{
+  background:linear-gradient(90deg,var(--bg) 25%,#E2E8F0 50%,var(--bg) 75%);
+  background-size:800px 100%;animation:shimmer 1.5s infinite;
+  border-radius:var(--radius-sm);
+}
+.skel-h{height:.75rem;margin-bottom:.5rem;width:60%}
+.skel-row{display:flex;gap:8px;margin-bottom:.5rem}
+.skel-box{height:2rem;flex:1}
+.toast{
+  position:fixed;top:calc(var(--safe-top) + 4rem);left:50%;transform:translateX(-50%);
+  background:var(--text-primary);color:#fff;padding:.5rem 1rem;
+  border-radius:999px;font-size:.72rem;font-weight:600;
+  z-index:100;opacity:0;transition:opacity .3s;pointer-events:none;
+}
+.toast.show{opacity:1}
+.tab-bar{
+  display:flex;background:var(--surface);
+  border-top:1px solid var(--border);
+  padding-bottom:var(--safe-bottom);
+  flex-shrink:0;z-index:10;
+  box-shadow:0 -1px 8px rgba(0,0,0,.04);
+}
+.tab-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:var(--tab-height);border:none;background:none;cursor:pointer;
+  color:var(--text-muted);font-size:.55rem;font-weight:600;
+  transition:color .2s;gap:4px;font-family:inherit;
+  -webkit-tap-highlight-color:transparent;
+}
+.tab-btn.active{color:var(--navy)}
+.tab-btn svg{transition:stroke .2s}
+.tab-btn.active svg{stroke:var(--navy)}
+.tab-dot{width:4px;height:4px;border-radius:50%;background:transparent;transition:background .2s}
+.tab-btn.active .tab-dot{background:var(--navy)}
+.usage-iframe{width:100%;height:100%;border:none;display:none}
+.usage-iframe.active{display:block}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@supports(padding:max(0px)){.header{padding-top:max(.75rem,var(--safe-top))}}
+</style>
+</head>
+<body>
+
+<div id="app-shell">
+  <div class="status-bar-spacer"></div>
+
+  <div class="header">
+    <div class="header-left">
+      <div class="header-logo">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
+      <div>
+        <h1>Jom Digital <span>CC</span></h1>
+        <div style="font-size:.6rem;opacity:.5;display:flex;align-items:center;gap:5px">
+          <span id="headerStatusDot" class="status-dot offline"></span>
+          <span id="headerStatusText">Loading...</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span id="lastUpdated">—</span>
+      <button class="btn-icon" onclick="refreshAll()" aria-label="Refresh">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- TAB: Dashboard -->
+  <div class="scroll-area active" id="dashboardTab">
+    <div class="pull-indicator" id="pullIndicator">Pull to refresh</div>
+    <div class="main" id="dashboardContent">
+      <div class="error-banner" id="errorBanner" style="display:none"></div>
+      <div class="stats-row" id="statsRow">
+        <div class="stat-card"><div class="eyebrow">Services</div><div class="num" id="s-services">—</div><div class="label">Online</div></div>
+        <div class="stat-card"><div class="eyebrow">CPU</div><div class="num" id="s-cpu">—</div><div class="label">Usage</div></div>
+        <div class="stat-card"><div class="eyebrow">Memory</div><div class="num" id="s-ram">—</div><div class="label">RAM</div></div>
+        <div class="stat-card"><div class="eyebrow">Storage</div><div class="num" id="s-disk">—</div><div class="label">Disk</div></div>
+        <div class="stat-card"><div class="eyebrow">Uptime</div><div class="num" id="s-uptime">—</div><div class="label">System</div></div>
+      </div>
+      <div id="skeletonLoader">
+        <div class="skeleton skel-h"></div>
+        <div class="skeleton skel-h" style="width:40%"></div>
+        <div class="skel-row"><div class="skeleton skel-box"></div><div class="skeleton skel-box"></div></div>
+        <div class="skel-row"><div class="skeleton skel-box"></div><div class="skeleton skel-box"></div></div>
+      </div>
+      <div id="loadedContent" style="display:none">
+        <div class="section-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <div class="card-icon" style="background:var(--green-bg)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+              <div><div class="card-eyebrow">Infrastructure</div><h3>System Health</h3></div>
+            </div>
+            <span class="card-pill" id="serviceCount">—</span>
+          </div>
+          <div class="card-body"><div class="service-list" id="servicesList"></div></div>
+        </div>
+        <div class="section-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <div class="card-icon" style="background:var(--amber-bg)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+              <div><div class="card-eyebrow">DeepSeek</div><h3>API Balance</h3></div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="bal-grid" id="balanceGrid">
+              <div class="bal-card"><div class="curr">CNY</div><div class="amt cny" id="bal-cny">—</div></div>
+              <div class="bal-card"><div class="curr">USD</div><div class="amt usd" id="bal-usd">—</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <div class="card-icon" style="background:var(--purple-bg)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg>
+              </div>
+              <div><div class="card-eyebrow">GitHub</div><h3>Hermes Updates</h3></div>
+            </div>
+          </div>
+          <div class="card-body"><div id="updatesContent"></div></div>
+        </div>
+        <div class="section-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <div class="card-icon" style="background:var(--blue-bg)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div><div class="card-eyebrow">Insights</div><h3>Recommendations</h3></div>
+            </div>
+          </div>
+          <div class="card-body"><div class="rec-list" id="recsList"></div></div>
+        </div>
+        <div class="section-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <div class="card-icon" style="background:var(--navy-light)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              </div>
+              <div><div class="card-eyebrow">Navigation</div><h3>Quick Links</h3></div>
+            </div>
+          </div>
+          <div class="card-body"><div class="quick-links" id="quickLinks"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Sites -->
+  <div class="scroll-area" id="sitesTab">
+    <div class="main" style="padding-top:1rem">
+      <div class="sites-stats">
+        <div class="sites-stat"><div class="num" id="sites-total">0</div><div class="lbl">Total Sites</div></div>
+        <div class="sites-stat"><div class="num" id="sites-domains">0</div><div class="lbl">Custom Domains</div></div>
+        <div class="sites-stat"><div class="num" id="sites-pages">0</div><div class="lbl">CF Pages</div></div>
+      </div>
+      <div id="sitesContent"></div>
+    </div>
+  </div>
+
+  <!-- TAB: AI Usage -->
+  <iframe class="usage-iframe" id="usageTab" src="about:blank" title="AI Usage"></iframe>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      <span>Dashboard</span>
+      <div class="tab-dot"></div>
+    </button>
+    <button class="tab-btn" data-tab="sites" onclick="switchTab('sites')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <span>Sites</span>
+      <div class="tab-dot"></div>
+    </button>
+    <button class="tab-btn" data-tab="usage" onclick="switchTab('usage')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18V9m6 9V5m6 13v-6m4 6H2"/></svg>
+      <span>AI Usage</span>
+      <div class="tab-dot"></div>
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SITES = [
+  {name:'Anas Perodua',url:'https://anasperodua.com',cat:'perodua',type:'Multi-page model site',domain:'anasperodua.com',cf:true},
+  {name:'Perodua Nurul',url:'https://peroduasemenyihsales.com',cat:'perodua',type:'SA Site',domain:'peroduasemenyihsales.com',cf:true},
+  {name:'Rezuwan Perodua',url:'https://rezuwanperodua.com',cat:'perodua',type:'SA Site (Loan Calc + Eligibility)',domain:'rezuwanperodua.com',cf:true},
+  {name:'Aamien Perodua',url:'https://aamienperodua.com',cat:'perodua',type:'SA Site (Loan Calc + Eligibility)',domain:'aamienperodua.com',cf:true},
+  {name:'Amirul Perodua',url:'https://amirulperoduaeastcoast.com',cat:'perodua',type:'SA Site (Loan Calc + Eligibility)',domain:'amirulperoduaeastcoast.com',cf:true},
+  {name:'Neena Perodua',url:'https://neenaperodua.com',cat:'perodua',type:'Multi-page SA Site',domain:'neenaperodua.com',cf:true},
+  {name:'LP Generator SA Perodua',url:'https://landingpage-generator-saperodua.my',cat:'perodua',type:'SA Landing Page Tool',domain:'landingpage-generator-saperodua.my',cf:true},
+  {name:'Perodua Eligibility',url:'https://perodua-eligibility.pages.dev',cat:'tools',type:'Eligibility Checker',cf:true},
+  {name:'Perodua Loan Calculator',url:'https://perodua-loan-calculator.pages.dev',cat:'tools',type:'Loan Calculator',cf:true},
+  {name:'Proton Eligibility',url:'https://proton-eligibility.pages.dev',cat:'proton',type:'Eligibility Checker',cf:true},
+  {name:'Proton Loan Calculator',url:'https://proton-loan-calculator.pages.dev',cat:'proton',type:'Loan Calculator',cf:true},
+  {name:'Proton Combined',url:'https://proton-combined.pages.dev',cat:'proton',type:'Loan Calc + Eligibility',cf:true},
+  {name:'Proton TwentyOne',url:'https://protontwentyone.com',cat:'proton',type:'Dealer Site',domain:'protontwentyone.com',cf:true},
+  {name:'Toyota Eligibility',url:'https://toyota-eligibility.pages.dev',cat:'toyota',type:'Eligibility Checker',cf:true},
+  {name:'Amierul Toyota KL',url:'https://amierultoyotakl.com',cat:'toyota',type:'SA Site',domain:'amierultoyotakl.com',cf:true},
+  {name:'Beli Coway Sekarang',url:'https://belicowaysekarang.my',cat:'coway',type:'Product Pages',domain:'belicowaysekarang.my',cf:true},
+  {name:'Salina Coway',url:'https://salinacoway.my',cat:'coway',type:'SA Site',domain:'salinacoway.my',cf:true},
+  {name:'Beli Penapis Air',url:'https://belipenapisair.com',cat:'coway',type:'Product Pages',domain:'belipenapisair.com',cf:true},
+  {name:'Coway Farida',url:'https://cowayfarida.my',cat:'coway',type:'SA Site',domain:'cowayfarida.my',cf:true},
+  {name:'Coway Sale Clone',url:'https://cowaysalemalaysia-clone.pages.dev',cat:'coway',type:'Clone (34 pages)',cf:true},
+  {name:'UNI Dental Setia Alam',url:'https://unidentalsetiaalam.com',cat:'dental',type:'Clinic Site',domain:'unidentalsetiaalam.com',cf:true},
+  {name:'Empire Canopy',url:'https://empirecanopy.biz',cat:'canopy',type:'E-commerce',domain:'empirecanopy.biz',cf:true},
+  {name:'Jual Canopy',url:'https://jualcanopy.net',cat:'canopy',type:'E-commerce',domain:'jualcanopy.net',cf:true},
+  {name:'Kilang Canopy',url:'https://kilangcanopy.com',cat:'canopy',type:'E-commerce',domain:'kilangcanopy.com',cf:true},
+  {name:'Klate Canopy',url:'https://klatecanopy.com',cat:'canopy',type:'E-commerce',domain:'klatecanopy.com',cf:true},
+  {name:'Soloz Merch',url:'https://solozmerch.com',cat:'other',type:'E-commerce',domain:'solozmerch.com',cf:true},
+  {name:'Jom Content',url:'https://jom-content.com',cat:'other',type:'Content Platform',domain:'jom-content.com',cf:true},
+  {name:'Jom Digital Google Ads',url:'https://jom-digital-google-ads.pages.dev',cat:'other',type:'Landing Page',cf:true},
+  {name:'Teleprompter JomDigital',url:'https://teleprompter-jomdigital.pages.dev',cat:'other',type:'Tool',cf:true},
+];
+
+const CATEGORIES = [
+  {id:'perodua',label:'Perodua',icon:'🚗'},
+  {id:'tools',label:'Eligibility & Calculators',icon:'🧮'},
+  {id:'proton',label:'Proton',icon:'🚙'},
+  {id:'toyota',label:'Toyota',icon:'🚘'},
+  {id:'coway',label:'Coway',icon:'💧'},
+  {id:'dental',label:'Dental',icon:'🦷'},
+  {id:'canopy',label:'Canopy',icon:'🏗️'},
+  {id:'other',label:'Other',icon:'📦'},
+];
+
+const API_BASE = 'https://admin.funnelcraft.my';
+const QUICK_LINKS = [
+  {label:'Claude + Codex Usage',url:'#usage',icon:'purple',svg:'<path d="M4 18V9m6 9V5m6 13v-6m4 6H2"/>'},
+  {label:'Anas Perodua Leads',url:API_BASE+'/api/v1/dashboard/anas-perodua',icon:'blue',svg:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>'},
+  {label:'UNI Dental Leads',url:API_BASE+'/api/v1/dashboard/uni-dental',icon:'blue',svg:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>'},
+  {label:'Nurul Perodua Leads',url:API_BASE+'/api/v1/dashboard/perodua-nurul',icon:'blue',svg:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>'},
+  {label:'WA Dashboard',url:'https://wa.funnelcraft.my',icon:'green',svg:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'},
+  {label:'n8n Workflows',url:'https://n8n.funnelcraft.my',icon:'orange',svg:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'},
+  {label:'Gitea Repos',url:'https://git.funnelcraft.my',icon:'purple',svg:'<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>'},
+  {label:'Preview Server',url:'https://preview.funnelcraft.my',icon:'blue',svg:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'},
+  {label:'Lead Webhook',url:'https://webhook.funnelcraft.my',icon:'orange',svg:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>'},
+  {label:'Hermes Agent',url:'https://github.com/nousresearch/hermes-agent',icon:'purple',svg:'<path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>'},
+];
+
+let currentTab = 'dashboard';
+let dashboardData = null;
+
+function renderSites() {
+  const container = document.getElementById('sitesContent');
+  let total = SITES.length;
+  let domains = SITES.filter(function(s){return s.domain}).length;
+  let pages = SITES.filter(function(s){return s.cf}).length;
+  document.getElementById('sites-total').textContent = total;
+  document.getElementById('sites-domains').textContent = domains;
+  document.getElementById('sites-pages').textContent = pages;
+  let html = '';
+  CATEGORIES.forEach(function(cat){
+    var sites = SITES.filter(function(s){return s.cat===cat.id});
+    if(sites.length===0) return;
+    html += '<div class="site-cat-card">';
+    html += '<div class="site-cat-head">';
+    html += '<span class="site-cat-dot '+cat.id+'"></span>';
+    html += '<span class="site-cat-name">'+cat.icon+' '+cat.label+'</span>';
+    html += '<span class="site-cat-count">'+sites.length+' sites</span>';
+    html += '</div><div class="site-grid">';
+    sites.forEach(function(s){
+      var dotClass = s.domain ? 'live' : 'dev';
+      var displayUrl = s.domain || s.url.replace('https://','');
+      html += '<a href="'+s.url+'" target="_blank" class="site-card">';
+      html += '<div class="site-card-name">'+s.name+'</div>';
+      html += '<div class="site-card-url"><span class="site-dot '+dotClass+'"></span>'+displayUrl+'</div>';
+      html += '</a>';
+    });
+    html += '</div></div>';
+  });
+  container.innerHTML = html;
+}
+
+function renderQuickLinks() {
+  document.getElementById('quickLinks').innerHTML = QUICK_LINKS.map(function(l){
+    var isInternal = l.url.startsWith('#');
+    return '<a href="'+l.url+'" class="quick-link" '+(isInternal ? 'data-tab="usage" onclick="event.preventDefault();switchTab(this.dataset.tab);return false"' : 'target="_blank"')+'>'+
+      '<span class="ql-icon '+l.icon+'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">'+l.svg+'</svg></span>'+
+      l.label+'</a>';
+  }).join('');
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  document.querySelectorAll('.scroll-area').forEach(function(s){s.classList.remove('active')});
+  var usageTab = document.getElementById('usageTab');
+  if(tab==='dashboard'){
+    document.getElementById('dashboardTab').classList.add('active');
+    usageTab.classList.remove('active');
+  } else if(tab==='sites'){
+    document.getElementById('sitesTab').classList.add('active');
+    usageTab.classList.remove('active');
+  } else {
+    usageTab.classList.add('active');
+    if(usageTab.src==='about:blank') usageTab.src = API_BASE + '/usage';
+  }
+}
+
+function showToast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show')}, 2000);
+}
+
+function fmtUptime(s){
+  if(!s) return '';
+  return s.replace(/^up /,'').split(',')[0] || s;
+}
+
+async function refreshAll(){
+  var errBanner = document.getElementById('errorBanner');
+  errBanner.style.display = 'none';
+  try {
+    var resp = await fetch(API_BASE + '/api/v1/master/status');
+    if(!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
+    dashboardData = data;
+    document.getElementById('lastUpdated').textContent = data.timestamp || '—';
+    var services = data.services || {};
+    var online = Object.values(services).filter(function(s){return s.active}).length;
+    var total = Object.keys(services).length;
+    document.getElementById('s-services').textContent = online + '/' + total;
+    document.getElementById('serviceCount').textContent = online + '/' + total + ' online';
+    var allUp = online === total;
+    var dot = document.getElementById('headerStatusDot');
+    dot.className = 'status-dot ' + (allUp ? 'online' : 'offline');
+    document.getElementById('headerStatusText').textContent = allUp ? 'All Systems Operational' : online + '/' + total + ' online';
+    var srv = data.server || {};
+    if(srv.cpu !== undefined) document.getElementById('s-cpu').textContent = srv.cpu + '%';
+    if(srv.ram) document.getElementById('s-ram').textContent = srv.ram.percent + '%';
+    if(srv.disk) document.getElementById('s-disk').textContent = srv.disk.used_gb + 'GB';
+    if(srv.uptime) document.getElementById('s-uptime').textContent = fmtUptime(srv.uptime);
+    document.getElementById('servicesList').innerHTML = Object.entries(services).map(function(e){
+      var name = e[0], svc = e[1];
+      var uptime = svc.uptime ? svc.uptime.slice(0, 16) : '';
+      return '<div class="service-item"><div class="service-left"><span class="status-dot '+(svc.active?'online':'offline')+'"></span><div><div class="service-name">'+name+'</div><div class="service-uptime">'+uptime+'</div></div></div><span class="service-status '+(svc.active?'active':'inactive')+'">'+(svc.active?'UP':'DOWN')+'</span></div>';
+    }).join('');
+    var ds = data.deepseek;
+    if(ds && !ds.error){
+      document.getElementById('bal-cny').textContent = '¥' + ds.CNY;
+      document.getElementById('bal-usd').textContent = '$' + ds.USD;
+    }
+    var hermes = data.hermes;
+    var updatesDiv = document.getElementById('updatesContent');
+    if(hermes && hermes.version){
+      updatesDiv.innerHTML = '<div class="update-card"><div class="update-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg></div><div class="update-info"><div class="tag">Latest Release</div><div class="version">'+hermes.version+' <span style="font-weight:500;color:#94a3b8;font-size:.68rem">('+hermes.published+')</span></div><div class="desc">'+(hermes.summary||'')+'</div><a href="'+hermes.url+'" target="_blank">View Release →</a></div></div>';
+    } else {
+      updatesDiv.innerHTML = '<div class="loading-text">Unable to fetch updates</div>';
+    }
+    var recs = data.recommendations || [];
+    var recsList = document.getElementById('recsList');
+    if(recs.length===0){
+      recsList.innerHTML = '<div class="loading-text">All systems looking good!</div>';
+    } else {
+      recsList.innerHTML = recs.map(function(r){
+        var cls = r.type==='critical'?'critical':r.type==='warning'?'warning':r.type==='success'?'success':'info';
+        return '<div class="rec-item '+cls+'"><span class="rec-icon">'+r.icon+'</span><div class="rec-text"><div class="rec-title">'+r.title+'</div><div class="rec-detail">'+r.detail+'</div></div></div>';
+      }).join('');
+    }
+    document.getElementById('skeletonLoader').style.display = 'none';
+    document.getElementById('loadedContent').style.display = '';
+  } catch(err){
+    errBanner.style.display = 'block';
+    errBanner.innerHTML = 'Failed to load: '+err.message+' <button onclick="refreshAll()">Retry</button>';
+  }
+}
+
+var pullStart = 0, pulling = false;
+var scrollArea = document.getElementById('dashboardTab');
+var pullIndicator = document.getElementById('pullIndicator');
+scrollArea.addEventListener('touchstart', function(e){
+  if(scrollArea.scrollTop <= 0) pullStart = e.touches[0].clientY;
+}, {passive:true});
+scrollArea.addEventListener('touchmove', function(e){
+  if(scrollArea.scrollTop <= 0 && e.touches[0].clientY - pullStart > 40 && !pulling){
+    pulling = true;
+    pullIndicator.classList.add('visible');
+  }
+}, {passive:true});
+scrollArea.addEventListener('touchend', function(){
+  if(pulling){
+    pullIndicator.classList.remove('visible');
+    pulling = false;
+    refreshAll();
+    showToast('Refreshed');
+  }
+});
+
+function init(){
+  renderQuickLinks();
+  renderSites();
+  refreshAll();
+  setInterval(refreshAll, 60000);
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('/sw.js').catch(function(){});
+  }
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
