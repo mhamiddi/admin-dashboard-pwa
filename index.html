@@ -350,6 +350,28 @@ body{
         <div class="section-card">
           <div class="card-header">
             <div class="card-header-left">
+              <div class="card-icon" style="background:var(--navy-bg,var(--purple-bg))">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <div><div class="card-eyebrow">Pipeline</div><h3>CRM Leads</h3></div>
+            </div>
+            <span class="card-pill" id="crmLeadCount">—</span>
+          </div>
+          <div class="card-body">
+            <div class="bal-grid" id="crmPipelineGrid" style="grid-template-columns:repeat(3,1fr)">
+              <div class="bal-card"><div class="curr">Hot</div><div class="amt cny" id="crm-hot" style="color:var(--red,#ef4444)">—</div></div>
+              <div class="bal-card"><div class="curr">Warm</div><div class="amt cny" id="crm-warm" style="color:var(--amber,#f59e0b)">—</div></div>
+              <div class="bal-card"><div class="curr">Cold</div><div class="amt cny" id="crm-cold" style="color:var(--blue,#60a5fa)">—</div></div>
+              <div class="bal-card"><div class="curr">Closed</div><div class="amt usd" id="crm-closed" style="color:var(--green,#22c55e)">—</div></div>
+              <div class="bal-card"><div class="curr">Clients</div><div class="amt usd" id="crm-clients" style="color:var(--purple,#a78bfa)">—</div></div>
+              <div class="bal-card"><div class="curr">24h Leads</div><div class="amt usd" id="crm-24h" style="color:var(--navy,#60a5fa)">—</div></div>
+            </div>
+            <div style="margin-top:10px;text-align:center"><a href="'+API_BASE+'/crm/" style="color:var(--purple,#a78bfa);font-size:.75rem;font-weight:600;text-decoration:none">Buka CRM Dashboard →</a></div>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="card-header">
+            <div class="card-header-left">
               <div class="card-icon" style="background:var(--amber-bg)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
               </div>
@@ -625,6 +647,21 @@ async function refreshAll(){
     } else {
       updatesDiv.innerHTML = '<div class="loading-text">Unable to fetch updates</div>';
     }
+    try{
+      var crmResp = await fetch(API_BASE + '/api/v1/master/leads-summary');
+      if(crmResp.ok){
+        var crm = await crmResp.json();
+        var cl = crm.crm_leads || {};
+        document.getElementById('crmLeadCount').textContent = (cl.total||0) + ' leads';
+        document.getElementById('crm-hot').textContent = cl.hot||0;
+        document.getElementById('crm-warm').textContent = cl.warm||0;
+        document.getElementById('crm-cold').textContent = cl.cold||0;
+        document.getElementById('crm-closed').textContent = cl.closed||0;
+        var db24 = crm.total_db_rows_24h||0;
+        document.getElementById('crm-clients').textContent = cl.total||0;
+        document.getElementById('crm-24h').textContent = db24;
+      }
+    }catch(crmErr){ /* CRM card optional — jangan ganggu dashboard utama */ }
     var recs = data.recommendations || [];
     var recsList = document.getElementById('recsList');
     if(recs.length===0){
